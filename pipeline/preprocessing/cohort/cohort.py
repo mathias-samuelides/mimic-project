@@ -12,7 +12,7 @@ import logging
 from pipeline.file_info.raw.hosp import AdmissionsHeader
 
 from pipeline.prediction_task import PredictionTask, TargetType
-from pipeline.extract.tools import save_data
+from pipeline.extract.csv_tools import save_data
 
 logger = logging.getLogger()
 

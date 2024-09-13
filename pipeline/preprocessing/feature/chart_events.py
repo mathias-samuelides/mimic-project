@@ -21,9 +21,6 @@ class ChartEvents(Feature):
     def group() -> str:
         return FeatureGroup.CHART
 
-    def df(self) -> pd.DataFrame:
-        return self.df
-
     def extract_from(self, cohort: pd.DataFrame) -> pd.DataFrame:
         """Function for processing hospital observations from a pickled cohort, optimized for memory efficiency."""
         logger.info("[EXTRACTING CHART EVENTS DATA]")

@@ -7,8 +7,6 @@ from pipeline.file_info.raw.hosp import DiagnosesIcdHeader
 
 from pipeline.file_info.preproc.feature.diagnoses import DiagnosesFeatureHeader
 
-ROOT_ICD_CONVERT = "root_icd10_convert"
-
 
 class IcdConverter:
     def __init__(self):
@@ -53,7 +51,7 @@ class IcdConverter:
         )
 
         # Extract root of standardized ICD-10 codes (first 3 characters)
-        df[DiagnosesIcdHeader.ROOT] = df[ROOT_ICD_CONVERT].apply(
+        df[DiagnosesIcdHeader.ROOT] = df[DiagnosesIcdHeader.ICD10].apply(
             lambda x: x[:3] if isinstance(x, str) else np.nan
         )
         return df

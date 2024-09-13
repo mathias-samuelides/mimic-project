@@ -1,14 +1,7 @@
 import pandas as pd
 import numpy as np
-from enum import StrEnum
-from pipeline.file_info.code_map import MAP_NDC_PATH
-
-
-class NdcMappingHeader(StrEnum):
-    PRODUCT_NDC = "productndc"
-    NON_PROPRIETARY_NAME = "nonproprietaryname"
-    PHARM_CLASSES = "pharm_classes"
-    NEW_NDC = "new_ndc"
+from pipeline.file_info.code_map import NdcMapHeader
+from pipeline.extract.static.code_map import load_ndc_mapping
 
 
 # Read and preprocess NDC mapping table
@@ -19,25 +12,25 @@ def prepare_ndc_mapping() -> pd.DataFrame:
     # Select relevant columns
     ndc_map = ndc_map[
         [
-            NdcMappingHeader.PRODUCT_NDC,
-            NdcMappingHeader.NON_PROPRIETARY_NAME,
-            NdcMappingHeader.PHARM_CLASSES,
+            NdcMapHeader.PRODUCT_NDC,
+            NdcMapHeader.NON_PROPRIETARY_NAME,
+            NdcMapHeader.PHARM_CLASSES,
         ]
     ]
 
     # Clean and normalize the non-proprietary names (convert to lowercase and handle NaN)
-    ndc_map[NdcMappingHeader.NON_PROPRIETARY_NAME] = (
-        ndc_map[NdcMappingHeader.NON_PROPRIETARY_NAME].fillna("").str.lower()
+    ndc_map[NdcMapHeader.NON_PROPRIETARY_NAME] = (
+        ndc_map[NdcMapHeader.NON_PROPRIETARY_NAME].fillna("").str.lower()
     )
 
     # Format NDC codes and add to a new column
-    ndc_map[NdcMappingHeader.NEW_NDC] = ndc_map[NdcMappingHeader.PRODUCT_NDC].apply(
+    ndc_map[NdcMapHeader.NEW_NDC] = ndc_map[NdcMapHeader.PRODUCT_NDC].apply(
         format_ndc_table
     )
 
     # Drop duplicates based on formatted NDC and non-proprietary name
     ndc_map = ndc_map.drop_duplicates(
-        subset=[NdcMappingHeader.NEW_NDC, NdcMappingHeader.NON_PROPRIETARY_NAME]
+        subset=[NdcMapHeader.NEW_NDC, NdcMapHeader.NON_PROPRIETARY_NAME]
     )
 
     return ndc_map
@@ -66,7 +59,7 @@ def format_ndc_table(ndc: str) -> str:
 # Read the NDC mapping file from disk
 def read_ndc_mapping() -> pd.DataFrame:
     """Reads the NDC mapping file from a specified path and processes it."""
-    ndc_map = pd.read_csv(MAP_NDC_PATH, delimiter="\t", encoding="latin1")
+    ndc_map = load_ndc_mapping()
     ndc_map.columns = ndc_map.columns.str.lower()  # Normalize column names
     return ndc_map
 

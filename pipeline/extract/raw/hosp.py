@@ -13,11 +13,13 @@ from pipeline.file_info.raw.hosp import (
     PrescriptionsHeader,
 )
 
+COMPRESSION = "gzip"
+
 
 def load_patients() -> pd.DataFrame:
     return pd.read_csv(
         HOSP_PATIENTS_PATH,
-        compression="gzip",
+        compression=COMPRESSION,
         parse_dates=[PatientsHeader.DOD],
     )
 
@@ -25,7 +27,7 @@ def load_patients() -> pd.DataFrame:
 def load_admissions() -> pd.DataFrame:
     return pd.read_csv(
         HOSP_ADMISSIONS_PATH,
-        compression="gzip",
+        compression=COMPRESSION,
         parse_dates=[
             AdmissionsHeader.ADMITTIME.value,
             AdmissionsHeader.DISCHTIME.value,
@@ -34,13 +36,13 @@ def load_admissions() -> pd.DataFrame:
 
 
 def load_diagnosis_icd() -> pd.DataFrame:
-    return pd.read_csv(HOSP_DIAGNOSES_ICD_PATH, compression="gzip")
+    return pd.read_csv(HOSP_DIAGNOSES_ICD_PATH, compression=COMPRESSION)
 
 
 def load_lab_events(chunksize: int, use_cols=None) -> pd.DataFrame:
     return pd.read_csv(
         HOSP_LAB_EVENTS_PATH,
-        compression="gzip",
+        compression=COMPRESSION,
         parse_dates=[LabEventsHeader.CHART_TIME],
         chunksize=chunksize,
         usecols=use_cols,
@@ -50,7 +52,7 @@ def load_lab_events(chunksize: int, use_cols=None) -> pd.DataFrame:
 def load_procedures_icd() -> pd.DataFrame:
     return pd.read_csv(
         HOSP_PROCEDURES_ICD_PATH,
-        compression="gzip",
+        compression=COMPRESSION,
         parse_dates=[ProceduresIcdHeader.CHART_DATE.value],
     ).drop_duplicates()
 
@@ -58,7 +60,7 @@ def load_procedures_icd() -> pd.DataFrame:
 def load_prescriptions() -> pd.DataFrame:
     return pd.read_csv(
         HOSP_PREDICTIONS_PATH,
-        compression="gzip",
+        compression=COMPRESSION,
         usecols=[
             PrescriptionsHeader.PATIENT_ID,
             PrescriptionsHeader.HOSPITAL_ADMISSION_ID,

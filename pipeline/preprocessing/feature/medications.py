@@ -152,7 +152,7 @@ class Medications(Feature):
         med = med.merge(ndc_map, on=NdcMapHeader.NEW_NDC, how="left")
 
         # Extract pharmacological class information
-        med[MedicationsFeatureWithoutIcuHeader.EPC] = med["pharm_classes"].apply(
-            get_EPC
-        )
+        med[MedicationsFeatureWithoutIcuHeader.EPC] = med[
+            NdcMapHeader.PHARM_CLASSES
+        ].apply(get_EPC)
         return med

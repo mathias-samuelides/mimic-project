@@ -1,5 +1,4 @@
 from enum import StrEnum
-import pandas as pd
 from pipeline.file_info.path_prefix import RAW_PATH
 
 """

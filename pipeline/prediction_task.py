@@ -27,7 +27,6 @@ class PredictionTask:
             raise ValueError(
                 "the number of days after a readmission should be positive."
             )
-        # TODO: add other data validation
         self.target_type = target_type
         self.disease_readmission = disease_readmission
         self.disease_selection = disease_selection

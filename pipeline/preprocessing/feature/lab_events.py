@@ -2,7 +2,6 @@ from tqdm import tqdm
 from pipeline.preprocessing.feature.feature_abc import Feature, FeatureGroup
 import logging
 import pandas as pd
-from pipeline.file_info.preproc.feature.lab_events import LabEventsFeatureHeader
 from pipeline.file_info.preproc.cohort import CohortHeader, CohortWithoutIcuHeader
 from pipeline.file_info.raw.hosp import (
     AdmissionsHeader,

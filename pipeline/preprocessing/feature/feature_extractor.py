@@ -26,7 +26,7 @@ from pipeline.file_info.preproc.feature.diagnoses import (
 from pipeline.file_info.preproc.feature.chart_events import FEATURE_CHART_EVENTS_PATH
 from pipeline.file_info.preproc.feature.lab_events import FEATURE_LAB_EVENTS_PATH
 from pipeline.file_info.preproc.feature.output_events import FEATURE_OUTPUT_EVENTS_PATH
-from pipeline.extract.tools import save_data
+from pipeline.extract.csv_tools import save_data
 
 
 logging.basicConfig(level=logging.DEBUG)

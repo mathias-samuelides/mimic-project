@@ -4,7 +4,6 @@ from pipeline.prediction_task import PredictionTask, TargetType
 from pipeline.file_info.preproc.cohort import (
     CohortHeader,
     CohortWithIcuHeader,
-    CohortWithoutIcuHeader,
 )
 
 

@@ -1,7 +1,6 @@
 from pipeline.preprocessing.feature.feature_abc import Feature, FeatureGroup
 import logging
 import pandas as pd
-import numpy as np
 from pipeline.file_info.preproc.feature.output_events import OutputEventsFeatureHeader
 from pipeline.file_info.preproc.cohort import CohortWithIcuHeader
 from pipeline.file_info.raw.icu import OutputEventsHeader
