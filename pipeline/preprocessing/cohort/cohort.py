@@ -5,8 +5,8 @@ import datetime
 from pipeline.file_info.preproc.cohort import (
     COHORT_PATH,
     CohortHeader,
-    NonIcuCohortHeader,
-    IcuCohortHeader,
+    CohortWithIcuHeader,
+    CohortWithoutIcuHeader,
 )
 import logging
 from pipeline.file_info.raw.hosp import Admissions
@@ -29,15 +29,26 @@ class Cohort:
         self.name = name
         self.summary_name = f"summary_{name}"
         self.admit_col = (
-            IcuCohortHeader.IN_TIME if self.with_icu else NonIcuCohortHeader.ADMIT_TIME
+            CohortWithIcuHeader.IN_TIME
+            if self.with_icu
+            else CohortWithoutIcuHeader.ADMIT_TIME
         )
         self.disch_col = (
-            IcuCohortHeader.OUT_TIME if self.with_icu else NonIcuCohortHeader.DISCH_TIME
+            CohortWithIcuHeader.OUT_TIME
+            if self.with_icu
+            else CohortWithoutIcuHeader.DISCH_TIME
         )
 
+    @staticmethod
+    def _clean_visits(visits: pd.DataFrame, required_cols: list) -> pd.DataFrame:
+        return visits.dropna(subset=required_cols)
+
     def prepare_mort_labels(self, visits: pd.DataFrame):
-        visits = visits.dropna(subset=[self.admit_col, self.disch_col])
+        """Prepare mortality labels by checking if the patient died during their hospital stay."""
+        # Drop rows with missing admission or discharge times
+        visits = self._clean_visits(visits, [self.admit_col, self.disch_col])
         visits[CohortHeader.DOD] = pd.to_datetime(visits[CohortHeader.DOD])
+        # Assign mortality labels: 1 if death occurred between admission and discharge, 0 otherwise
         visits[CohortHeader.LABEL] = np.where(
             (visits[CohortHeader.DOD] >= visits[self.admit_col])
             & (visits[CohortHeader.DOD] <= visits[self.disch_col]),
@@ -49,7 +60,8 @@ class Cohort:
         )
         return visits
 
-    def prepare_read_labels(self, visits: pd.DataFrame, nb_days: int):
+    def prepare_readm_labels(self, visits: pd.DataFrame, nb_days: int) -> pd.DataFrame:
+        """Prepare readmission labels based on whether the patient was readmitted within a certain time period."""
         gap = datetime.timedelta(days=nb_days)
         visits["next_admit"] = (
             visits.sort_values(by=[self.admit_col])
@@ -66,10 +78,12 @@ class Cohort:
         )
         return visits.drop(columns=["next_admit", "time_to_next"])
 
-    def prepare_los_labels(self, visits: pd.DataFrame, nb_days):
-        visits = visits.dropna(
-            subset=[self.admit_col, self.disch_col, CohortHeader.LOS]
+    def prepare_los_labels(self, visits: pd.DataFrame, nb_days) -> pd.DataFrame:
+        """Prepare length of stay labels based on whether the stay exceeded a certain number of days."""
+        visits = self._clean_visits(
+            visits, [self.admit_col, self.disch_col, CohortHeader.LOS]
         )
+
         visits[CohortHeader.LABEL] = (visits[CohortHeader.LOS] > nb_days).astype(int)
         logger.info(
             f"[ LOS LABELS FINISHED: {visits[CohortHeader.LABEL].sum()} LOS Cases ]"
@@ -80,13 +94,13 @@ class Cohort:
         if prediction_task.target_type == TargetType.MORTALITY:
             df = self.prepare_mort_labels(visits)
         elif prediction_task.target_type == TargetType.READMISSION:
-            df = self.prepare_read_labels(visits, prediction_task.nb_days)
+            df = self.prepare_readm_labels(visits, prediction_task.nb_days)
         elif prediction_task.target_type == TargetType.LOS:
             df = self.prepare_los_labels(visits, prediction_task.nb_days)
         df = df.sort_values(by=[CohortHeader.PATIENT_ID, self.admit_col])
         self.df = df.rename(columns={Admissions.RACE: CohortHeader.ETHICITY})
 
-    def save(self):
+    def save(self) -> pd.DataFrame:
         save_data(self.df, COHORT_PATH / f"{self.name}.csv.gz", "COHORT")
 
     def save_summary(self):
@@ -103,21 +117,24 @@ class Cohort:
             f.write(summary)
 
 
-def read_cohort(name: str, use_icu: bool) -> pd.DataFrame:
-    data = pd.read_csv(
-        COHORT_PATH / f"{name}.csv.gz",
-        compression="gzip",
-    )
-    start_time = IcuCohortHeader.IN_TIME if use_icu else NonIcuCohortHeader.ADMIT_TIME
-    stop_time = IcuCohortHeader.OUT_TIME if use_icu else NonIcuCohortHeader.DISCH_TIME
-    for col in [start_time, stop_time]:
-        data[col] = pd.to_datetime(data[col])
-    data[CohortHeader.LOS] = (
-        (data[stop_time] - data[start_time]).dt.total_seconds() / 3600
-    ).astype(int)
-    data = data[data[CohortHeader.LOS] > 0]
-    data[CohortHeader.AGE] = data[CohortHeader.AGE].astype(int)
-
-    logger.info("[ READ COHORT ]")
-
-    return data
+def load_cohort(use_icu: bool, file_name: str) -> pd.DataFrame:
+    """Load cohort data from a CSV file."""
+    cohort_path = COHORT_PATH / f"{file_name}.csv.gz"
+    try:
+        return pd.read_csv(
+            cohort_path,
+            compression="gzip",
+            parse_dates=[
+                (
+                    CohortWithIcuHeader.IN_TIME
+                    if use_icu
+                    else CohortWithoutIcuHeader.ADMIT_TIME
+                )
+            ],
+        )
+    except FileNotFoundError:
+        logger.error(f"Cohort file not found at {cohort_path}")
+        raise
+    except Exception as e:
+        logger.error(f"Error loading cohort file: {e}")
+        raise

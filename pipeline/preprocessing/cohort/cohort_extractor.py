@@ -3,8 +3,8 @@ from pipeline.preprocessing.cohort.cohort import Cohort
 from pipeline.extract.raw.hosp import load_patients, load_admissions, Admissions
 from pipeline.extract.raw.icu import load_icustays
 from pipeline.preprocessing.cohort.visit import (
-    make_icu_visits,
-    make_no_icu_visits,
+    make_visits_with_icu,
+    make_visits_witout_icu,
     make_patients,
     filter_visits,
 )
@@ -27,10 +27,14 @@ class CohortExtractor:
         self.prediction_task = prediction_task
         self.output = output
 
+    def get_icu_status(self) -> str:
+        """Determines the ICU status based on the prediction task."""
+        return "WITH_ICU" if self.prediction_task.use_icu else "WITHOUT_ICU"
+
     def fill_output(self) -> None:
         """Fill the output details based on the prediction task"""
         cohort_details = self.prediction_task.target_type.lower().replace(" ", "_")
-
+        cohort_details += f"_{self.get_icu_status().lower()}"
         if self.prediction_task.nb_days is not None:
             cohort_details += f"_{self.prediction_task.nb_days}"
 
@@ -45,11 +49,11 @@ class CohortExtractor:
     def make_visits(self, patients, admissions):
         if self.prediction_task.use_icu:
             icu_icustays = load_icustays()
-            return make_icu_visits(
+            return make_visits_with_icu(
                 icu_icustays, patients, self.prediction_task.target_type
             )
         else:
-            return make_no_icu_visits(admissions, self.prediction_task.target_type)
+            return make_visits_witout_icu(admissions, self.prediction_task.target_type)
 
     def filter_and_merge_visits(
         self,
@@ -92,5 +96,6 @@ class CohortExtractor:
         )
         cohort.prepare_labels(visits, self.prediction_task)
         cohort.save()
+
         cohort.save_summary()
         return cohort

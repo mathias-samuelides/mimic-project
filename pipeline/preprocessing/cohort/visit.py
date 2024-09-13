@@ -4,8 +4,8 @@ from pipeline.file_info.raw.hosp import Patients, Admissions
 from pipeline.file_info.raw.icu import IcuStays
 from pipeline.file_info.preproc.cohort import (
     CohortHeader,
-    IcuCohortHeader,
-    NonIcuCohortHeader,
+    CohortWithIcuHeader,
+    CohortWithoutIcuHeader,
 )
 from pipeline.prediction_task import TargetType, DiseaseCode
 from pipeline.conversion.icd import IcdConverter
@@ -32,7 +32,7 @@ def make_patients(hosp_patients: pd.DataFrame) -> pd.DataFrame:
     )
     # To identify visits with prediction windows outside the range 2008-2019.
     patients[CohortHeader.MIN_VALID_YEAR] = (
-        hosp_patients[Patients.ANCHOR_YEAR] + 2019 - max_anchor_year_group
+        hosp_patients[Patients.ANCHOR_YEAR] + 2008 - max_anchor_year_group
     )
     patients = patients.rename(columns={Patients.ANCHOR_AGE: CohortHeader.AGE})[
         [
@@ -46,14 +46,14 @@ def make_patients(hosp_patients: pd.DataFrame) -> pd.DataFrame:
     return patients
 
 
-def make_icu_visits(
-    icu_icustays: pd.DataFrame, hosp_patients: pd.DataFrame, target_type: TargetType
+def make_visits_with_icu(
+    icustays: pd.DataFrame, patients: pd.DataFrame, target_type: TargetType
 ) -> pd.DataFrame:
     if target_type != TargetType.READMISSION:
-        return icu_icustays
+        return icustays
     # Filter out stays where either there is no death or the death occurred after ICU discharge
-    patients_dod = hosp_patients[[Patients.ID, Patients.DOD]]
-    visits = icu_icustays.merge(patients_dod, on=IcuStays.PATIENT_ID)
+    patients_dod = patients[[Patients.ID, Patients.DOD]]
+    visits = icustays.merge(patients_dod, on=IcuStays.PATIENT_ID)
     filtered_visits = visits.loc[
         (visits[Patients.DOD].isna())
         | (visits[Patients.DOD] >= visits[IcuStays.OUTTIME])
@@ -61,33 +61,31 @@ def make_icu_visits(
     return filtered_visits[
         [
             CohortHeader.PATIENT_ID,
-            IcuCohortHeader.STAY_ID,
+            CohortWithIcuHeader.STAY_ID,
             CohortHeader.HOSPITAL_ADMISSION_ID,
-            IcuCohortHeader.IN_TIME,
-            IcuCohortHeader.OUT_TIME,
+            CohortWithIcuHeader.IN_TIME,
+            CohortWithIcuHeader.OUT_TIME,
             CohortHeader.LOS,
         ]
     ]
 
 
-def make_no_icu_visits(
-    hosp_admissions: pd.DataFrame, target_type: TargetType
+def make_visits_witout_icu(
+    admissions: pd.DataFrame, target_type: TargetType
 ) -> pd.DataFrame:
-    hosp_admissions[Admissions.LOS] = (
-        hosp_admissions[Admissions.DISCHTIME] - hosp_admissions[Admissions.ADMITTIME]
+    admissions[Admissions.LOS] = (
+        admissions[Admissions.DISCHTIME] - admissions[Admissions.ADMITTIME]
     ).dt.days
 
     if target_type == TargetType.READMISSION:
         # Filter out hospitalizations where the patient expired
-        hosp_admissions = hosp_admissions[
-            hosp_admissions[Admissions.HOSPITAL_EXPIRE_FLAG] == 0
-        ]
-    return hosp_admissions[
+        admissions = admissions[admissions[Admissions.HOSPITAL_EXPIRE_FLAG] == 0]
+    return admissions[
         [
             CohortHeader.PATIENT_ID,
             CohortHeader.HOSPITAL_ADMISSION_ID,
-            NonIcuCohortHeader.ADMIT_TIME,
-            NonIcuCohortHeader.DISCH_TIME,
+            CohortWithoutIcuHeader.ADMIT_TIME,
+            CohortWithoutIcuHeader.DISCH_TIME,
             CohortHeader.LOS,
         ]
     ]

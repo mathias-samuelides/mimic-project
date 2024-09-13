@@ -3,7 +3,7 @@ from enum import StrEnum
 
 class TargetType(StrEnum):
     MORTALITY = "Mortality"
-    LOS = "Lenghth of stay"  # to predict length of stay greater than a given number of days
+    LOS = "Length of stay"  # to predict length of stay greater than a given number of days
     READMISSION = "Readmission"  # to predict readmission after a given number of days for a disease if the disease_readmission code is given
 
 

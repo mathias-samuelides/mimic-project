@@ -7,47 +7,33 @@ logger = logging.getLogger()
 COHORT_PATH = PREPROC_PATH / "cohort"
 
 
-# split common header icu header non icu header
 class CohortHeader(StrEnum):
-    PATIENT_ID = "subject_id"
-    HOSPITAL_ADMISSION_ID = "hadm_id"
-    FIRST_CARE_UNIT = "first_careunit"
-    LAST_CARE_UNIT = "last_careunit"
-    LOS = "los"
-    AGE = "age"
-    MIN_VALID_YEAR = "min_valid_year"
-    DOD = "dod"
-    GENDER = "gender"
-    INSURANCE = "insurance"
-    ETHICITY = "ethnicity"
-    LABEL = "label"
+    PATIENT_ID = "subject_id"  # Unique identifier for each patient
+    HOSPITAL_ADMISSION_ID = "hadm_id"  # Identifier for each hospital admission
+    FIRST_CARE_UNIT = "first_careunit"  # The first ICU unit the patient was admitted to
+    LAST_CARE_UNIT = "last_careunit"  # The last ICU unit the patient stayed in
+    LOS = "los"  # Length of stay in the ICU (measured in days)
+    AGE = "age"  # The patient's age at the time of admission
+    MIN_VALID_YEAR = "min_valid_year"  # Minimum valid year for the patient data
+    DOD = "dod"  # Date of death for the patient (NaT if the patient is alive)
+    GENDER = "gender"  # Gender of the patient
+    INSURANCE = "insurance"  # Type of insurance covering the patient
+    ETHICITY = "ethnicity"  # Ethnicity of the patient
+    LABEL = "label"  # Label used for prediction or classification purposes
 
 
-class IcuCohortHeader(StrEnum):
-    STAY_ID = "stay_id"
-    IN_TIME = "intime"
-    OUT_TIME = "outtime"
+# This class defines the headers specific to ICU-related data, used when ICU data is included in the cohort.
+class CohortWithIcuHeader(StrEnum):
+    STAY_ID = "stay_id"  # Unique identifier for each ICU stay
+    IN_TIME = "intime"  # Time when the patient was admitted to the ICU
+    OUT_TIME = "outtime"  # Time when the patient was discharged from the ICU
 
 
-class NonIcuCohortHeader(StrEnum):
-    ADMIT_TIME = "admittime"
-    DISCH_TIME = "dischtime"
-
-
-def load_cohort(use_icu: bool, cohort_ouput: str) -> pd.DataFrame:
-    """Load cohort data from a CSV file."""
-    cohort_path = COHORT_PATH / f"{cohort_ouput}.csv.gz"
-    try:
-        return pd.read_csv(
-            cohort_path,
-            compression="gzip",
-            parse_dates=[
-                IcuCohortHeader.IN_TIME if use_icu else NonIcuCohortHeader.ADMIT_TIME
-            ],
-        )
-    except FileNotFoundError:
-        logger.error(f"Cohort file not found at {cohort_path}")
-        raise
-    except Exception as e:
-        logger.error(f"Error loading cohort file: {e}")
-        raise
+# This class defines the headers for non-ICU cohort data, used when the cohort excludes ICU-specific data.
+class CohortWithoutIcuHeader(StrEnum):
+    ADMIT_TIME = (
+        "admittime"  # Time when the patient was admitted to the hospital (non-ICU)
+    )
+    DISCH_TIME = (
+        "dischtime"  # Time when the patient was discharged from the hospital (non-ICU)
+    )

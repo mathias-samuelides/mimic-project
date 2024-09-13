@@ -5,6 +5,8 @@ from pathlib import Path
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
 
+# TODO: function read zip csv with date + usecolss? rename tools -> csv*
+
 
 def save_data(data: pd.DataFrame, path: Path, data_name: str) -> pd.DataFrame:
     """Save DataFrame to specified path."""
