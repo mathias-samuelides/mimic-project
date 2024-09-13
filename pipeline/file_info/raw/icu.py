@@ -16,7 +16,7 @@ PROCEDURE_EVENTS_PATH = RAW_PATH / ICU / "procedureevents.csv.gz"
 
 
 # information regarding ICU stays
-class IcuStays(StrEnum):
+class IcuStaysHeader(StrEnum):
     PATIENT_ID = "subject_id"  # patient id
     ID = "stay_id"  # icu stay id
     HOSPITAL_ADMISSION_ID = "hadm_id"  # patient hospitalization id
@@ -27,7 +27,7 @@ class IcuStays(StrEnum):
 
 
 # Information regarding patient outputs including urine, drainage...
-class OuputputEvents(StrEnum):
+class OutputEventsHeader(StrEnum):
     SUBJECT_ID = "subject_id"  # patient id
     HOSPITAL_ADMISSION_ID = "hadm_id"  # patient hospitalization id
     STAY_ID = "stay_id"  # patient icu stay id
@@ -35,7 +35,7 @@ class OuputputEvents(StrEnum):
     CHART_TIME = "charttime"  # time of an output event
 
 
-class ChartEvents(StrEnum):
+class ChartEventsHeader(StrEnum):
     STAY_ID = "stay_id"
     CHARTTIME = "charttime"
     ITEMID = "itemid"
@@ -43,7 +43,7 @@ class ChartEvents(StrEnum):
     VALUEOM = "valueuom"
 
 
-class InputEvents(StrEnum):
+class InputEventsHeader(StrEnum):
     SUBJECT_ID = "subject_id"
     STAY_ID = "stay_id"
     ITEMID = "itemid"
@@ -54,7 +54,7 @@ class InputEvents(StrEnum):
     ORDERID = "orderid"
 
 
-class ProceduresEvents(StrEnum):
+class ProceduresEventsHeader(StrEnum):
     STAY_ID = "stay_id"
     START_TIME = "starttime"
     ITEM_ID = "itemid"

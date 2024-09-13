@@ -1,6 +1,6 @@
 from pipeline.prediction_task import PredictionTask
 from pipeline.preprocessing.cohort.cohort import Cohort
-from pipeline.extract.raw.hosp import load_patients, load_admissions, Admissions
+from pipeline.extract.raw.hosp import load_patients, load_admissions, AdmissionsHeader
 from pipeline.extract.raw.icu import load_icustays
 from pipeline.preprocessing.cohort.visit import (
     make_visits_with_icu,
@@ -73,9 +73,9 @@ class CohortExtractor:
         patients_filtered = patients_data.loc[patients_data["age"] >= 18]
         admissions_info = admissions[
             [
-                Admissions.HOSPITAL_ADMISSION_ID,
-                Admissions.INSURANCE,
-                Admissions.RACE,
+                AdmissionsHeader.HOSPITAL_ADMISSION_ID,
+                AdmissionsHeader.INSURANCE,
+                AdmissionsHeader.RACE,
             ]
         ]
         # Merge visits with patients and admissions data

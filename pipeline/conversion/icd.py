@@ -3,8 +3,9 @@ import numpy as np
 
 from pipeline.file_info.code_map import IcdMapHeader
 from pipeline.extract.static.code_map import load_static_icd_map
-from pipeline.file_info.raw.hosp import DiagnosesIcd
+from pipeline.file_info.raw.hosp import DiagnosesIcdHeader
 
+from pipeline.file_info.preproc.feature.diagnoses import DiagnosesFeatureHeader
 
 ROOT_ICD_CONVERT = "root_icd10_convert"
 
@@ -44,20 +45,22 @@ class IcdConverter:
 
     def standardize_icd(self, df: pd.DataFrame) -> pd.DataFrame:
         """Standardizes ICD codes in a DataFrame by converting ICD-9 to ICD-10."""
-        df["CONVERTED_ICD_CODE"] = df.apply(
+        df[DiagnosesFeatureHeader.CONVERTED_ICD_CODE] = df.apply(
             lambda row: self.convert_icd(
-                row[DiagnosesIcd.ICD_CODE], row[DiagnosesIcd.ICD_VERSION]
+                row[DiagnosesIcdHeader.ICD_CODE], row[DiagnosesIcdHeader.ICD_VERSION]
             ),
             axis=1,
         )
 
         # Extract root of standardized ICD-10 codes (first 3 characters)
-        df[DiagnosesIcd.ROOT] = df["CONVERTED_ICD_CODE"].apply(
+        df[DiagnosesIcdHeader.ROOT] = df[ROOT_ICD_CONVERT].apply(
             lambda x: x[:3] if isinstance(x, str) else np.nan
         )
         return df
 
     def get_pos_ids(self, diag: pd.DataFrame, icd10_code: str) -> pd.Series:
         """Extracts unique hospital admission IDs where the ICD-10 root matches a given code."""
-        matching_rows = diag[diag[DiagnosesIcd.ROOT].str.contains(icd10_code, na=False)]
-        return matching_rows[DiagnosesIcd.HOSPITAL_ADMISSION_ID].unique()
+        matching_rows = diag[
+            diag[DiagnosesIcdHeader.ROOT].str.contains(icd10_code, na=False)
+        ]
+        return matching_rows[DiagnosesIcdHeader.HOSPITAL_ADMISSION_ID].unique()

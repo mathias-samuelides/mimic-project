@@ -1,5 +1,4 @@
 from enum import StrEnum
-import pandas as pd
 from pipeline.file_info.path_prefix import RAW_PATH
 
 """ 
@@ -17,7 +16,7 @@ HOSP_PROCEDURES_ICD_PATH = RAW_PATH / HOSP / "procedures_icd.csv.gz"
 
 
 # information regarding a patient
-class Patients(StrEnum):
+class PatientsHeader(StrEnum):
     ID = "subject_id"  # patient id
     ANCHOR_YEAR = "anchor_year"  # shifted year for the patient
     ANCHOR_AGE = "anchor_age"  # patient’s age in the anchor_year
@@ -27,7 +26,7 @@ class Patients(StrEnum):
 
 
 # information regarding a patient’s admission to the hospital
-class Admissions(StrEnum):
+class AdmissionsHeader(StrEnum):
     ID = "hadm_id"  # hospitalization id
     PATIENT_ID = "subject_id"  # patient id
     ADMITTIME = "admittime"  # datetime the patient was admitted to the hospital
@@ -39,7 +38,7 @@ class Admissions(StrEnum):
     RACE = "race"
 
 
-class DiagnosesIcd(StrEnum):
+class DiagnosesIcdHeader(StrEnum):
     SUBJECT_ID = "subject_id"  # patient id
     HOSPITAL_ADMISSION_ID = "hadm_id"  # patient hospitalization id
     SEQ_NUM = "seq_num"  #  priority assigned to the diagnoses
@@ -50,7 +49,7 @@ class DiagnosesIcd(StrEnum):
     ROOT = "root"
 
 
-class LabEvents(StrEnum):
+class LabEventsHeader(StrEnum):
     PATIENT_ID = "subject_id"
     HOSPITAL_ADMISSION_ID = "hadm_id"
     CHART_TIME = "charttime"
@@ -61,7 +60,7 @@ class LabEvents(StrEnum):
     VALUE_UOM = "valueuom"
 
 
-class ProceduresIcd(StrEnum):
+class ProceduresIcdHeader(StrEnum):
     PATIENT_ID = "subject_id"
     HOSPITAL_ADMISSION_ID = "hadm_id"
     SEQ_NUM = "seq_num"
@@ -70,7 +69,7 @@ class ProceduresIcd(StrEnum):
     ICD_VERSION = "icd_version"
 
 
-class Prescriptions(StrEnum):
+class PrescriptionsHeader(StrEnum):
     PATIENT_ID = "subject_id"
     HOSPITAL_ADMISSION_ID = "hadm_id"
     DRUG = "drug"

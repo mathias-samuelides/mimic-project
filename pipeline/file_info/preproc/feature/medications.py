@@ -1,11 +1,11 @@
 from enum import StrEnum
 from pipeline.file_info.preproc.feature.path_prefix import FEATURE_EXTRACT_PATH
 
-EXTRACT_MED_WITH_ICU_PATH = FEATURE_EXTRACT_PATH / "med_icu.csv.gz"
-EXTRACT_MED_WITHOUT_ICU_PATH = FEATURE_EXTRACT_PATH / "med.csv.gz"
+FEATURE_MEDICATIONS_WITH_ICU_PATH = FEATURE_EXTRACT_PATH / "med_icu.csv.gz"
+FEATURE_MEDICATIONS_WITHOUT_ICU_PATH = FEATURE_EXTRACT_PATH / "med.csv.gz"
 
 
-class MedicationHeader(StrEnum):
+class MedicationsFeatureHeader(StrEnum):
     PATIENT_ID = "subject_id"
     HOSPITAL_ADMISSION_ID = "hadm_id"
     START_TIME = "starttime"
@@ -13,7 +13,7 @@ class MedicationHeader(StrEnum):
     STOP_HOURS_FROM_ADMIT = "stop_hours_from_admit"
 
 
-class MedicationWithIcuHeader(StrEnum):
+class MedicationsFeatureWithIcuHeader(StrEnum):
     STAY_ID = "stay_id"
     ITEM_ID = "itemid"
     END_TIME = "endtime"
@@ -22,7 +22,7 @@ class MedicationWithIcuHeader(StrEnum):
     ORDER_ID = "orderid"
 
 
-class MedicationWithoutIcuHeader(StrEnum):
+class MedicationsFeatureWithoutIcuHeader(StrEnum):
     STOP_TIME = "stoptime"
     DRUG = "drug"
     NON_PROPRIEATARY_NAME = "nonproprietaryname"

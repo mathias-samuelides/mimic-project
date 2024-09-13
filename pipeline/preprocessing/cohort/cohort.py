@@ -9,7 +9,7 @@ from pipeline.file_info.preproc.cohort import (
     CohortWithoutIcuHeader,
 )
 import logging
-from pipeline.file_info.raw.hosp import Admissions
+from pipeline.file_info.raw.hosp import AdmissionsHeader
 
 from pipeline.prediction_task import PredictionTask, TargetType
 from pipeline.extract.tools import save_data
@@ -98,7 +98,7 @@ class Cohort:
         elif prediction_task.target_type == TargetType.LOS:
             df = self.prepare_los_labels(visits, prediction_task.nb_days)
         df = df.sort_values(by=[CohortHeader.PATIENT_ID, self.admit_col])
-        self.df = df.rename(columns={Admissions.RACE: CohortHeader.ETHICITY})
+        self.df = df.rename(columns={AdmissionsHeader.RACE: CohortHeader.ETHICITY})
 
     def save(self) -> pd.DataFrame:
         save_data(self.df, COHORT_PATH / f"{self.name}.csv.gz", "COHORT")

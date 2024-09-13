@@ -1,9 +1,6 @@
 from enum import StrEnum
 from pipeline.file_info.path_prefix import PREPROC_PATH
-import pandas as pd
-import logging
 
-logger = logging.getLogger()
 COHORT_PATH = PREPROC_PATH / "cohort"
 
 

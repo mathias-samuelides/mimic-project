@@ -4,21 +4,21 @@ from pipeline.file_info.preproc.cohort import (
     CohortHeader,
     CohortWithoutIcuHeader,
 )
-from pipeline.file_info.preproc.feature.medication import (
-    MedicationHeader,
-    MedicationWithIcuHeader,
-    MedicationWithoutIcuHeader,
+from pipeline.file_info.preproc.feature.medications import (
+    MedicationsFeatureHeader,
+    MedicationsFeatureWithIcuHeader,
+    MedicationsFeatureWithoutIcuHeader,
 )
 from pipeline.extract.raw.icu import load_input_events
 from pipeline.extract.raw.hosp import load_prescriptions
-from pipeline.file_info.raw.icu import InputEvents
-from pipeline.file_info.raw.hosp import Prescriptions
+from pipeline.file_info.raw.icu import InputEventsHeader
+from pipeline.file_info.raw.hosp import PrescriptionsHeader
 import pandas as pd
-from pipeline.conversion.ndc import get_EPC, convert_ndc_to_string
+from pipeline.conversion.ndc import prepare_ndc_mapping, get_EPC, convert_ndc_to_string
 from pipeline.file_info.code_map import NdcMapHeader
 
 
-class Medication(Feature):
+class Medications(Feature):
     def __init__(
         self,
         with_icu: bool,
@@ -81,12 +81,16 @@ class Medication(Feature):
             if self.with_icu
             else CohortWithoutIcuHeader.ADMIT_TIME
         )
-        medications[MedicationHeader.START_HOURS_FROM_ADMIT] = (
-            medications[InputEvents.STARTTIME] - medications[admit_header]
+        medications[MedicationsFeatureHeader.START_HOURS_FROM_ADMIT] = (
+            medications[InputEventsHeader.STARTTIME] - medications[admit_header]
         )
-        medications[MedicationHeader.STOP_HOURS_FROM_ADMIT] = (
+        medications[MedicationsFeatureHeader.STOP_HOURS_FROM_ADMIT] = (
             medications[
-                InputEvents.ENDTIME if self.with_icu else Prescriptions.STOP_TIME
+                (
+                    InputEventsHeader.ENDTIME
+                    if self.with_icu
+                    else PrescriptionsHeader.STOP_TIME
+                )
             ]
             - medications[admit_header]
         )
@@ -99,16 +103,17 @@ class Medication(Feature):
         )
 
         # Select relevant columns for medications
-        cols = [h.value for h in MedicationHeader] + [
+        cols = [h.value for h in MedicationsFeatureHeader] + [
             h.value
             for h in (
-                MedicationWithIcuHeader if self.with_icu else MedicationWithoutIcuHeader
+                MedicationsFeatureWithIcuHeader
+                if self.with_icu
+                else MedicationsFeatureWithoutIcuHeader
             )
         ]
         medications = medications[cols]
 
         self.df = medications
-        breakpoint()
         return medications
 
     def normalize_non_icu(self, med: pd.DataFrame) -> pd.DataFrame:
@@ -122,8 +127,8 @@ class Medication(Feature):
             pd.DataFrame: The normalized dataframe.
         """
         # Clean and normalize the drug names
-        med[MedicationWithoutIcuHeader.DRUG] = (
-            med[MedicationWithoutIcuHeader.DRUG]
+        med[MedicationsFeatureWithoutIcuHeader.DRUG] = (
+            med[MedicationsFeatureWithoutIcuHeader.DRUG]
             .fillna("")
             .astype(str)
             .str.lower()
@@ -133,18 +138,21 @@ class Medication(Feature):
 
         # Handle missing NDC codes
         MISSING_NDC = -1
-        med[Prescriptions.NDC] = (
-            med[Prescriptions.NDC].fillna(MISSING_NDC).astype("Int64")
+        med[PrescriptionsHeader.NDC] = (
+            med[PrescriptionsHeader.NDC].fillna(MISSING_NDC).astype("Int64")
         )
 
         # Convert NDC codes to strings
-        med[NdcMapHeader.NEW_NDC] = med[Prescriptions.NDC].apply(convert_ndc_to_string)
+        med[NdcMapHeader.NEW_NDC] = med[PrescriptionsHeader.NDC].apply(
+            convert_ndc_to_string
+        )
 
         # Merge with NDC mapping table
-        ndc_map = Prescriptions()
+        ndc_map = prepare_ndc_mapping()
         med = med.merge(ndc_map, on=NdcMapHeader.NEW_NDC, how="left")
 
         # Extract pharmacological class information
-        med[MedicationWithoutIcuHeader.EPC] = med["pharm_classes"].apply(get_EPC)
-        breakpoint()
+        med[MedicationsFeatureWithoutIcuHeader.EPC] = med["pharm_classes"].apply(
+            get_EPC
+        )
         return med

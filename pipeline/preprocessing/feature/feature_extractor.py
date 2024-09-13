@@ -2,15 +2,30 @@ from pathlib import Path
 import pandas as pd
 import logging
 from pipeline.preprocessing.feature.feature_abc import Feature
-from pipeline.preprocessing.feature.medication import Medication
+from pipeline.preprocessing.feature.medications import Medications
+from pipeline.preprocessing.feature.chart_events import ChartEvents
+from pipeline.preprocessing.feature.diagnoses import Diagnoses
+from pipeline.preprocessing.feature.lab_events import LabEvents
+from pipeline.preprocessing.feature.output_events import OutputEvents
+from pipeline.preprocessing.feature.procedures import Procedures
 from pipeline.preprocessing.cohort.cohort import load_cohort
 from typing import List, Tuple
 
-from pipeline.file_info.preproc.feature.medication import (
-    EXTRACT_MED_WITHOUT_ICU_PATH,
-    EXTRACT_MED_WITH_ICU_PATH,
+from pipeline.file_info.preproc.feature.medications import (
+    FEATURE_MEDICATIONS_WITH_ICU_PATH,
+    FEATURE_MEDICATIONS_WITHOUT_ICU_PATH,
 )
-from pipeline.preprocessing.feature.feature_abc import FeatureGroup
+from pipeline.file_info.preproc.feature.procedures import (
+    FEATURE_PROCEDURES_WITH_ICU_PATH,
+    FEATURE_PROCEDURES_WITHOUT_ICU_PATH,
+)
+from pipeline.file_info.preproc.feature.diagnoses import (
+    FEATURE_DIAG_WITH_ICU_PATH,
+    FEATURE_DIAG_WITHOUT_ICU_PATH,
+)
+from pipeline.file_info.preproc.feature.chart_events import FEATURE_CHART_EVENTS_PATH
+from pipeline.file_info.preproc.feature.lab_events import FEATURE_LAB_EVENTS_PATH
+from pipeline.file_info.preproc.feature.output_events import FEATURE_OUTPUT_EVENTS_PATH
 from pipeline.extract.tools import save_data
 
 
@@ -63,13 +78,46 @@ class FeatureExtractor:
         cohort = load_cohort(self.use_icu, self.cohort_output)
         feature_conditions: List[Tuple[bool, Feature, Path]] = [
             (
-                self.for_medications,
-                Medication(with_icu=self.use_icu),
+                self.for_diagnoses,
+                Diagnoses(use_icu=self.use_icu),
                 (
-                    EXTRACT_MED_WITH_ICU_PATH
+                    FEATURE_DIAG_WITH_ICU_PATH
                     if self.use_icu
-                    else EXTRACT_MED_WITHOUT_ICU_PATH
+                    else FEATURE_DIAG_WITHOUT_ICU_PATH
                 ),
+            ),
+            (
+                self.for_procedures,
+                Procedures(use_icu=self.use_icu),
+                (
+                    FEATURE_PROCEDURES_WITH_ICU_PATH
+                    if self.use_icu
+                    else FEATURE_PROCEDURES_WITHOUT_ICU_PATH
+                ),
+            ),
+            (
+                self.for_medications,
+                Medications(with_icu=self.use_icu),
+                (
+                    FEATURE_MEDICATIONS_WITH_ICU_PATH
+                    if self.use_icu
+                    else FEATURE_MEDICATIONS_WITHOUT_ICU_PATH
+                ),
+            ),
+            (
+                self.for_output_events and self.use_icu,
+                OutputEvents(),
+                FEATURE_OUTPUT_EVENTS_PATH,
+            ),
+            (
+                self.for_chart_events and self.use_icu,
+                ChartEvents(),
+                FEATURE_CHART_EVENTS_PATH,
+            ),
+            (
+                self.for_labs and not self.use_icu,
+                LabEvents(),
+                FEATURE_LAB_EVENTS_PATH,
             ),
         ]
         features = {}
